@@ -57,15 +57,22 @@ class _MyHomePageState extends State<MyHomePage> {
             receivePort.sendPort));
 
     // // Get the processed image from the isolate.
-    _colorMap = await receivePort.first as Map<List<int>, double>;
+    receivePort.listen((msg) {
+      if (msg == -1) {
+        print("Image not transparent");
+        colorIsolate.kill(priority: Isolate.immediate);
+        return;
+      } else {
+        _colorMap = msg['result'];
+        _colorMap.forEach((key, value) {
+          _colorPalette.add(
+              ColorPalette(Color.fromARGB(255, key[0], key[1], key[2]), value));
+        });
 
-    _colorMap.forEach((key, value) {
-      _colorPalette.add(
-          ColorPalette(Color.fromARGB(255, key[0], key[1], key[2]), value));
+        colorIsolate.kill(priority: Isolate.immediate);
+        setState(() {});
+      }
     });
-
-    colorIsolate.kill(priority: Isolate.immediate);
-    setState(() {});
   }
 
   @override
